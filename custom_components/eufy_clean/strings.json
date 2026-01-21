@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Eufy Clean Setup",
+                "description": "Enter your Eufy account credentials to discover your vacuum cleaners.",
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            },
+            "device": {
+                "title": "Select Device",
+                "description": "Select the vacuum cleaner you want to add.",
+                "data": {
+                    "device": "Device"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to Eufy Cloud. Please check your credentials.",
+            "unknown": "An unexpected error occurred."
+        },
+        "abort": {
+            "already_configured": "This device is already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Eufy Clean Options",
+                "description": "Configure options for your Eufy vacuum.",
+                "data": {
+                    "device_ip": "Device IP Address"
+                }
+            }
+        }
+    }
+}

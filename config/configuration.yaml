@@ -1,0 +1,33 @@
+# Home Assistant Development Configuration
+homeassistant:
+  name: Eufy Clean Dev
+  latitude: 51.5074
+  longitude: -0.1278
+  elevation: 0
+  unit_system: metric
+  time_zone: Europe/Berlin
+  
+# Enable logging
+logger:
+  default: info
+  logs:
+    custom_components.eufy_clean: debug
+
+# Enable the API
+http:
+  server_host: 0.0.0.0
+
+# Enable frontend
+frontend:
+
+# Enable configuration UI
+config:
+
+# Enable automation UI
+automation: !include automations.yaml
+
+# Enable script UI  
+script: !include scripts.yaml
+
+# Enable scene UI
+scene: !include scenes.yaml

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Eufy Clean Einrichtung",
+                "description": "Geben Sie Ihre Eufy-Kontodaten ein, um Ihre Staubsauger zu erkennen.",
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                }
+            },
+            "device": {
+                "title": "Gerät auswählen",
+                "description": "Wählen Sie den Staubsauger aus, den Sie hinzufügen möchten.",
+                "data": {
+                    "device": "Gerät"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Verbindung zur Eufy Cloud fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+        },
+        "abort": {
+            "already_configured": "Dieses Gerät ist bereits konfiguriert."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Eufy Clean Optionen",
+                "description": "Konfigurieren Sie die Optionen für Ihren Eufy-Staubsauger.",
+                "data": {
+                    "device_ip": "Geräte-IP-Adresse"
+                }
+            }
+        }
+    }
+}

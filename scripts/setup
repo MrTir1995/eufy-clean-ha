@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}Setting up Eufy Clean Home Assistant Integration Development Environment...${NC}"
+
+# Update pip
+echo -e "${GREEN}Updating pip...${NC}"
+python3 -m pip install --upgrade pip
+
+# Install Home Assistant
+echo -e "${GREEN}Installing Home Assistant...${NC}"
+pip3 install homeassistant
+
+# Install test and development dependencies
+echo -e "${GREEN}Installing test dependencies...${NC}"
+pip3 install -r requirements_test.txt
+
+# Install pre-commit hooks if .pre-commit-config.yaml exists
+if [ -f .pre-commit-config.yaml ]; then
+    echo -e "${GREEN}Installing pre-commit hooks...${NC}"
+    pip3 install pre-commit
+    pre-commit install
+fi
+
+# Create config directory structure
+echo -e "${GREEN}Creating Home Assistant config directory structure...${NC}"
+mkdir -p config
+mkdir -p config/custom_components
+mkdir -p config/custom_components/eufy_clean
+
+# Create minimal configuration.yaml if it doesn't exist
+if [ ! -f config/configuration.yaml ]; then
+    echo -e "${GREEN}Creating minimal configuration.yaml...${NC}"
+    cat > config/configuration.yaml <<EOF
+# Home Assistant Development Configuration
+homeassistant:
+  name: Eufy Clean Dev
+  latitude: 51.5074
+  longitude: -0.1278
+  elevation: 0
+  unit_system: metric
+  time_zone: Europe/Berlin
+  
+# Enable logging
+logger:
+  default: info
+  logs:
+    custom_components.eufy_clean: debug
+
+# Enable the API
+http:
+  server_host: 0.0.0.0
+
+# Enable frontend
+frontend:
+
+# Enable configuration UI
+config:
+
+# Enable automation UI
+automation: !include automations.yaml
+
+# Enable script UI  
+script: !include scripts.yaml
+
+# Enable scene UI
+scene: !include scenes.yaml
+EOF
+
+    # Create empty files for automations, scripts, and scenes
+    touch config/automations.yaml
+    touch config/scripts.yaml
+    touch config/scenes.yaml
+fi
+
+echo -e "${BLUE}Setup complete! You can now start developing your Eufy Clean integration.${NC}"
+echo -e "${GREEN}Run 'hass -c config' to start Home Assistant${NC}"
