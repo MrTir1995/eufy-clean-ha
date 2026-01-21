@@ -18,7 +18,7 @@
             },
             "ip": {
                 "title": "Enter IP Address",
-                "description": "The IP address for {device_name} could not be automatically discovered. Please enter the local IP address of the device manually (e.g. 192.168.1.100).",
+                "description": "The IP address for {device_name} could not be automatically discovered. Please enter the LOCAL IP address of the device in your home network (e.g. 192.168.1.100 or 10.0.0.50). You can find this in your router's DHCP list or device overview.",
                 "data": {
                     "device_ip": "IP Address"
                 }
@@ -27,6 +27,7 @@
         "error": {
             "cannot_connect": "Failed to connect to Eufy Cloud. Please check your credentials.",
             "invalid_ip": "Invalid IP address. Please enter a valid IPv4 address.",
+            "not_local_ip": "Public IP address detected. Please enter the LOCAL/PRIVATE IP address of your device in your home network (e.g. 192.168.x.x or 10.x.x.x), NOT the public internet IP address.",
             "unknown": "An unexpected error occurred."
         },
         "abort": {

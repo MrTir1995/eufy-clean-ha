@@ -18,7 +18,7 @@
             },
             "ip": {
                 "title": "IP-Adresse eingeben",
-                "description": "Die IP-Adresse für {device_name} konnte nicht automatisch gefunden werden. Bitte geben Sie die lokale IP-Adresse des Geräts manuell ein (z.B. 192.168.1.100).",
+                "description": "Die IP-Adresse für {device_name} konnte nicht automatisch gefunden werden. Bitte geben Sie die LOKALE IP-Adresse des Geräts in Ihrem Heimnetzwerk ein (z.B. 192.168.1.100 oder 10.0.0.50). Diese finden Sie in der DHCP-Liste oder Geräteübersicht Ihres Routers.",
                 "data": {
                     "device_ip": "IP-Adresse"
                 }
@@ -27,6 +27,7 @@
         "error": {
             "cannot_connect": "Verbindung zur Eufy Cloud fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.",
             "invalid_ip": "Ungültige IP-Adresse. Bitte geben Sie eine gültige IPv4-Adresse ein.",
+            "not_local_ip": "Öffentliche IP-Adresse erkannt. Bitte geben Sie die LOKALE/PRIVATE IP-Adresse Ihres Geräts im Heimnetzwerk ein (z.B. 192.168.x.x oder 10.x.x.x), NICHT die öffentliche Internet-IP-Adresse.",
             "unknown": "Ein unerwarteter Fehler ist aufgetreten."
         },
         "abort": {

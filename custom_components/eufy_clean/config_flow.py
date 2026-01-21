@@ -205,15 +205,24 @@ class EufyCleanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_ip = user_input[CONF_DEVICE_IP].strip()
 
-            # Validate IP format (basic check)
+            # Validate IP format and ensure it's a private/local IP
             import ipaddress
 
             try:
-                ipaddress.ip_address(device_ip)
-                # Add IP to device and create entry
-                if self._selected_device:
-                    self._selected_device["ip"] = device_ip
-                    return await self._create_entry(self._selected_device)
+                ip_obj = ipaddress.ip_address(device_ip)
+                
+                # Check if it's a private/local IP address
+                if not ip_obj.is_private:
+                    errors["base"] = "not_local_ip"
+                    _LOGGER.warning(
+                        "User entered public IP %s - local IP required for Tuya communication",
+                        device_ip,
+                    )
+                else:
+                    # Valid local IP - add to device and create entry
+                    if self._selected_device:
+                        self._selected_device["ip"] = device_ip
+                        return await self._create_entry(self._selected_device)
             except ValueError:
                 errors["base"] = "invalid_ip"
 
