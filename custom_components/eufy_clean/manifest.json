@@ -11,8 +11,7 @@
     "iot_class": "local_push",
     "issue_tracker": "https://github.com/MrTir1995/eufy-clean-ha/issues",
     "requirements": [
-        "tinytuya==1.13.2",
-        "aiohttp==3.9.1"
+        "tinytuya>=1.13.2"
     ],
-    "version": "1.0.1"
+    "version": "1.0.2"
 }
