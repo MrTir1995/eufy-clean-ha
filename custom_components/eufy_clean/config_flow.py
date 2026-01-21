@@ -277,8 +277,44 @@ class EufyCleanOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            device_ip = user_input.get(CONF_DEVICE_IP)
+            
+            if device_ip:
+                device_ip = device_ip.strip()
+                
+                # Validate IP format and ensure it's a private/local IP
+                import ipaddress
+                
+                try:
+                    ip_obj = ipaddress.ip_address(device_ip)
+                    
+                    # Check if it's a private/local IP address
+                    if not ip_obj.is_private:
+                        errors["base"] = "not_local_ip"
+                        _LOGGER.warning(
+                            "User entered public IP %s - local IP required",
+                            device_ip,
+                        )
+                    else:
+                        # Update config entry data with new IP
+                        new_data = {**self.config_entry.data, CONF_DEVICE_IP: device_ip}
+                        self.hass.config_entries.async_update_entry(
+                            self.config_entry,
+                            data=new_data,
+                        )
+                        # Reload the integration to apply changes
+                        await self.hass.config_entries.async_reload(
+                            self.config_entry.entry_id
+                        )
+                        return self.async_create_entry(title="", data={})
+                except ValueError:
+                    errors["base"] = "invalid_ip"
+            else:
+                # No IP provided, just close options
+                return self.async_create_entry(title="", data={})
 
         # Get current device IP from config entry
         current_ip = self.config_entry.data.get(CONF_DEVICE_IP)
@@ -287,10 +323,14 @@ class EufyCleanOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
+                    vol.Required(
                         CONF_DEVICE_IP,
-                        description={"suggested_value": current_ip},
+                        default=current_ip,
                     ): str,
                 }
             ),
+            errors=errors,
+            description_placeholders={
+                "current_ip": current_ip or "Unbekannt",
+            },
         )

@@ -37,8 +37,8 @@
     "options": {
         "step": {
             "init": {
-                "title": "Eufy Clean Options",
-                "description": "Configure options for your Eufy vacuum.",
+                "title": "Update Eufy Clean Settings",
+                "description": "Update the IP address of your Eufy vacuum cleaner. Current IP: {current_ip}\n\nEnter the LOCAL IP address (e.g. 192.168.1.100), NOT a public internet IP.",
                 "data": {
                     "device_ip": "Device IP Address"
                 }

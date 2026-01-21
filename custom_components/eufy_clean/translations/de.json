@@ -37,10 +37,10 @@
     "options": {
         "step": {
             "init": {
-                "title": "Eufy Clean Optionen",
-                "description": "Konfigurieren Sie die Optionen für Ihren Eufy-Staubsauger.",
+                "title": "Eufy Clean Einstellungen aktualisieren",
+                "description": "Aktualisieren Sie die IP-Adresse Ihres Eufy Staubsaugers. Aktuelle IP: {current_ip}\n\nGeben Sie die LOKALE IP-Adresse ein (z.B. 192.168.1.100), KEINE öffentliche Internet-IP.",
                 "data": {
-                    "device_ip": "Geräte-IP-Adresse"
+                    "device_ip": "Geräte IP-Adresse"
                 }
             }
         }
