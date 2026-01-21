@@ -2,7 +2,6 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 [![GitHub Release](https://img.shields.io/github/release/MrTir1995/eufy-clean-ha.svg)](https://github.com/MrTir1995/eufy-clean-ha/releases)
-[![License](https://img.shields.io/github/license/MrTir1995/eufy-clean-ha.svg)](LICENSE)
 
 Eine Home Assistant Custom Integration für die **lokale Steuerung** von Eufy Clean (RoboVac) Staubsaugerrobotern. Diese Integration ermöglicht die direkte Steuerung deines Eufy-Roboters aus Home Assistant heraus, ohne auf Cloud-Dienste angewiesen zu sein.
 
@@ -262,10 +261,6 @@ Beiträge sind willkommen! Wenn du mitwirken möchtest:
 4. Reiche einen Pull Request ein
 
 Für die Entwicklungsumgebung siehe [DEVELOPMENT.md](DEVELOPMENT.md)
-
-## 📄 Lizenz
-
-Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe die [LICENSE](LICENSE) Datei für Details.
 
 ## 🙏 Danksagungen
 

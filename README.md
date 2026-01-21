@@ -2,7 +2,8 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 [![GitHub Release](https://img.shields.io/github/release/MrTir1995/eufy-clean-ha.svg)](https://github.com/MrTir1995/eufy-clean-ha/releases)
-[![License](https://img.shields.io/github/license/MrTir1995/eufy-clean-ha.svg)](LICENSE)
+
+> [🇩🇪 Deutsche Version](README.de.md)
 
 A Home Assistant custom integration for **local control** of Eufy Clean (RoboVac) vacuum cleaners. This integration allows you to control your Eufy robotic vacuum directly from Home Assistant without relying on cloud services.
 
@@ -260,10 +261,6 @@ Contributions are welcome! If you'd like to contribute:
 4. Submit a pull request
 
 For development setup, see [DEVELOPMENT.md](DEVELOPMENT.md)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
