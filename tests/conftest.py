@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from custom_components.eufy_clean.const import (
@@ -14,7 +13,6 @@ from custom_components.eufy_clean.const import (
     CONF_LOCAL_KEY,
     CONF_MODEL,
 )
-
 
 # Load the integration for tests
 pytest_plugins = "pytest_homeassistant_custom_component"

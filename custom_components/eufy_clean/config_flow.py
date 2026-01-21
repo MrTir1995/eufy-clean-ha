@@ -178,7 +178,11 @@ class EufyCleanOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_DEVICE_IP,
-                        description={"suggested_value": self.config_entry.data.get(CONF_DEVICE_IP)},
+                        description={
+                            "suggested_value": self.config_entry.data.get(
+                                CONF_DEVICE_IP
+                            )
+                        },
                     ): str,
                 }
             ),

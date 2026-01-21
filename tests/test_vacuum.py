@@ -12,9 +12,9 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.eufy_clean.const import DOMAIN
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 async def test_vacuum_setup(hass, mock_config_entry_data):
