@@ -36,6 +36,40 @@ EUFY_CLIENTS: Final = [
 EUFY_CLIENT_ID: Final = "eufyhome-app"
 EUFY_CLIENT_SECRET: Final = "GQCpr9dSp3uQpsOMgJ4xQ"
 
+# Tuya API - Used by Eufy for device management
+TUYA_API_BASE: Final = "https://a1.tuyaeu.com"
+TUYA_CLIENT_ID: Final = "yx5v9uc3ef9wg3v9atje"
+
+# Tuya API Secrets (from Eufy Home Android app)
+TUYA_APP_SECRET: Final = "s8x78u7xwymasd9kqa7a73pjhxqsedaj"
+TUYA_BMP_SECRET: Final = "cepev5pfnhua4dkqkdpmnrdxx378mpjr"
+
+# Tuya HMAC key construction
+TUYA_HMAC_KEY: Final = f"A_{TUYA_BMP_SECRET}_{TUYA_APP_SECRET}".encode()
+
+# Tuya signature parameters (from Android app decompilation)
+TUYA_SIGNATURE_PARAMS: Final = {
+    "a",
+    "v",
+    "lat",
+    "lon",
+    "lang",
+    "deviceId",
+    "appVersion",
+    "ttid",
+    "isH5",
+    "h5Token",
+    "os",
+    "clientId",
+    "postData",
+    "time",
+    "requestId",
+    "et",
+    "n4h5",
+    "sid",
+    "sp",
+}
+
 # Data Point System (DPS) - Standard Mappings
 DPS_POWER: Final = "1"
 DPS_MODE: Final = "2"

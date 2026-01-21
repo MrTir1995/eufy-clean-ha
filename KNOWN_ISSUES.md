@@ -1,12 +1,43 @@
 # Bekannte Einschränkungen und Problemlösung
 
-## ⚠️ Aktueller Status (v1.2.1)
+## ✅ v2.0.0 - Tuya API Integration IMPLEMENTIERT!
 
-### Problem: Keine Geräte gefunden
+### Status: GELÖST ✅
 
-**Symptom**: Die Integration authentifiziert sich erfolgreich, findet aber keine Geräte.
+**Version 2.0.0** implementiert die vollständige Tuya API Integration für automatische Geräte-Discovery!
 
-**Ursache**: Eufy RoboVac-Geräte werden über die **Tuya IoT Plattform** verwaltet, nicht direkt über die Eufy API.
+### Was ist neu:
+
+✅ **Vollständige Tuya API Integration** - Geräte werden automatisch über die Tuya IoT Plattform gefunden
+✅ **Automatische Device Discovery** - Keine manuelle Schlüssel-Extraktion mehr nötig
+✅ **Multi-Home Support** - Unterstützt mehrere Eufy/Tuya Homes
+✅ **HMAC-Signaturen** - Korrekte Tuya API Authentifizierung
+✅ **AES-Verschlüsselung** - Sichere Passwort-Übertragung
+✅ **Lokale Steuerung** - Nach Setup komplett lokal via Tuya Protokoll
+
+### Technische Details:
+
+Die Integration verwendet jetzt einen zwei-stufigen Ansatz:
+
+1. **Eufy Home API** - Login und Benutzer-ID Extraktion
+2. **Tuya API** - Device Discovery mit Username `eh-{user_id}`
+
+Implementierte Module:
+- `tuya_crypto.py` - HMAC-SHA256, MD5-Shuffling, AES-Verschlüsselung
+- `tuya_api.py` - Vollständiger Tuya API Client
+- `eufy_api.py` - Kombinierte Eufy + Tuya Integration
+
+### Upgrade von v1.x:
+
+1. Update auf v2.0.0 über HACS oder manuell
+2. Integration neu einrichten (alte Einträge löschen)
+3. Login mit Eufy Account
+4. Geräte werden automatisch gefunden! 🎉
+
+### Workarounds (nicht mehr nötig):
+
+~~Option 1: Manuell Local Keys extrahieren~~ ✅ Gelöst in v2.0.0
+~~Option 2: Alternative Integrations~~ ✅ Gelöst in v2.0.0
 
 ### Technischer Hintergrund
 

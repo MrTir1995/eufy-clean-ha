@@ -55,7 +55,9 @@ async def main():
                 print("   - The robots are not linked to this account")
                 print("   - The robots need to be added via Eufy Home app first")
                 print("\n   💡 Eufy verwendet intern die Tuya API für Geräte.")
-                print("   Versuchen Sie, die Geräte in der Eufy Home App zu registrieren.")
+                print(
+                    "   Versuchen Sie, die Geräte in der Eufy Home App zu registrieren."
+                )
                 return False
 
             print("\n" + "=" * 70)

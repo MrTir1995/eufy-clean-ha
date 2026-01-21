@@ -39,11 +39,15 @@ async def main():
         try:
             url = f"{EUFY_API_BASE}user/email/login"
             print(f"   URL: {url}")
-            async with session.post(url, json=data, headers=headers, timeout=10) as response:
+            async with session.post(
+                url, json=data, headers=headers, timeout=10
+            ) as response:
                 result = await response.json()
 
                 if result.get("error"):
-                    print(f"   ✗ Login failed: {result.get('message', {}).get('message')}")
+                    print(
+                        f"   ✗ Login failed: {result.get('message', {}).get('message')}"
+                    )
                     return
 
                 print("   ✓ Login successful!")
@@ -70,6 +74,7 @@ async def main():
         except Exception as e:
             print(f"   ✗ Login error: {e}")
             import traceback
+
             traceback.print_exc()
             return
 
@@ -96,6 +101,7 @@ async def main():
                     base = base + "v1/"
 
                 from urllib.parse import urljoin
+
                 url = urljoin(base, endpoint)
                 print(f"   Full URL: {url}")
 
@@ -113,7 +119,7 @@ async def main():
                     if status == 200:
                         result = await response.json()
                         print(f"   Response keys: {list(result.keys())}")
-                        
+
                         # Check for devices
                         data = result.get("data", [])
                         if isinstance(data, dict):
@@ -141,7 +147,9 @@ async def main():
         print("Die Geräte werden möglicherweise NICHT über die Eufy API exponiert,")
         print("sondern nur über die Tuya API mit dem Username 'eh-{user_id}'.")
         print(f"\nIhr Tuya Username wäre: eh-{user_id}")
-        print("\nDie Integration müsste erweitert werden, um die Tuya API zu verwenden.")
+        print(
+            "\nDie Integration müsste erweitert werden, um die Tuya API zu verwenden."
+        )
 
 
 if __name__ == "__main__":

@@ -19,7 +19,6 @@ from .const import (
     DPS_RETURN_HOME,
     DPS_STATUS,
     EUFY_API_BASE,
-    EUFY_API_DEVICES,
     EUFY_API_LOGIN,
     EUFY_CLIENTS,
     STATE_CHARGING,
@@ -30,12 +29,13 @@ from .const import (
     STATE_RETURNING,
     TUYA_VERSION,
 )
+from .tuya_api import TuyaAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class EufyCloudAPI:
-    """Eufy Cloud API client for authentication and key extraction."""
+    """Eufy Cloud API client for authentication and key extraction via Tuya."""
 
     def __init__(self, session: aiohttp.ClientSession) -> None:
         """Initialize the Eufy Cloud API client."""
@@ -43,6 +43,8 @@ class EufyCloudAPI:
         self._token: str | None = None
         self._base_url: str = EUFY_API_BASE
         self._user_id: str | None = None
+        self._phone_code: str | None = None
+        self._tuya_client: TuyaAPIClient | None = None
 
     async def async_login(self, email: str, password: str) -> str:
         """Login to Eufy Cloud and get access token. Tries multiple client credentials."""
@@ -91,6 +93,7 @@ class EufyCloudAPI:
                         # Extrahiere user_id und request_host für weitere Requests
                         user_info = result.get("user_info", {})
                         self._user_id = user_info.get("id")
+                        self._phone_code = user_info.get("phone_code", "1")
                         request_host = user_info.get("request_host")
 
                         # Wenn eine spezifische request_host zurückgegeben wird, verwende diese
@@ -103,10 +106,16 @@ class EufyCloudAPI:
                             self._base_url = request_host
                             _LOGGER.debug("Using regional API server: %s", request_host)
 
+                        # Initialize Tuya API client
+                        self._tuya_client = TuyaAPIClient(self.session)
+                        self._tuya_client.username = f"eh-{self._user_id}"
+                        self._tuya_client.country_code = self._phone_code
+
                         _LOGGER.info(
                             "Successfully authenticated with Eufy API using client: %s",
                             client["name"],
                         )
+                        _LOGGER.debug("Tuya username: %s", self._tuya_client.username)
                         return self._token
                     else:
                         _LOGGER.debug(
@@ -127,125 +136,52 @@ class EufyCloudAPI:
         raise ValueError(error_msg)
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
-        """Get list of devices from Eufy Clean API."""
+        """Get list of devices from Tuya API (used by Eufy for RoboVac devices)."""
         if not self._token:
             raise ValueError("Not authenticated - call async_login first")
 
-        # Header wie in der offiziellen App
-        headers = {
-            "token": self._token,
-            "uid": self._user_id or "",
-            "category": "Home",
-            "User-Agent": "EufyHome-Android-2.4.0",
-            "timezone": "Europe/Berlin",
-            "openudid": "sdk_gphone64_arm64",
-            "clientType": "2",
-            "language": "de",
-            "country": "DE",
-            "Accept-Encoding": "gzip",
-        }
+        if not self._tuya_client:
+            raise ValueError("Tuya client not initialized")
 
         try:
-            # Verwende urljoin für sichere URL-Konstruktion
-            url = urljoin(self._base_url, EUFY_API_DEVICES)
-            _LOGGER.debug("Fetching devices from: %s", url)
-            async with self.session.get(url, headers=headers, timeout=10) as response:
-                response.raise_for_status()
-                result = await response.json()
-                _LOGGER.debug(
-                    "Devices response structure: %s",
-                    result.keys() if isinstance(result, dict) else type(result),
-                )
-                _LOGGER.debug("Full devices response: %s", result)
+            _LOGGER.info("Fetching devices from Tuya API...")
 
-                devices = []
+            # Get all devices from Tuya (supports multi-home)
+            tuya_devices = await self._tuya_client.get_all_devices()
 
-                # Eufy Clean API returns devices directly in "data" array
-                # or nested in data.items or data.devices
-                data = result.get("data", [])
+            _LOGGER.debug("Found %d devices from Tuya API", len(tuya_devices))
 
-                # Handle both array and dict responses
-                if isinstance(data, dict):
-                    items = (
-                        data.get("items", [])
-                        or data.get("devices", [])
-                        or data.get("device_list", [])
-                    )
-                elif isinstance(data, list):
-                    items = data
-                else:
-                    items = []
+            devices = []
+            for tuya_device in tuya_devices:
+                # Extract device info from Tuya format
+                device_info = {
+                    "device_id": tuya_device.get("devId"),
+                    "name": tuya_device.get("name", "Unknown"),
+                    "model": tuya_device.get("productId", "Unknown"),
+                    "local_key": tuya_device.get("localKey"),
+                    "ip": tuya_device.get("ip"),  # May not be present
+                }
 
-                _LOGGER.debug("Found %d items in Eufy Clean API response", len(items))
-
-                for idx, item in enumerate(items):
+                # Only add devices with required info
+                if device_info["device_id"] and device_info["local_key"]:
+                    devices.append(device_info)
                     _LOGGER.debug(
-                        "Processing item %d: %s",
-                        idx,
-                        item.keys() if isinstance(item, dict) else type(item),
+                        "Found device: %s (%s)",
+                        device_info["name"],
+                        device_info["device_id"],
                     )
-
-                    # Eufy Clean may return devices directly or nested
-                    device = None
-                    if isinstance(item, dict):
-                        device = item.get("device") or item
-
-                    if device:
-                        # Extract device info with fallbacks for Eufy Clean API
-                        device_info = {
-                            "device_id": (
-                                device.get("id")
-                                or device.get("device_id")
-                                or device.get("deviceId")
-                            ),
-                            "name": device.get("alias")
-                            or device.get("name")
-                            or device.get("device_name")
-                            or "Unknown",
-                            "model": (
-                                device.get("product", {}).get("product_code")
-                                or device.get("product_code")
-                                or device.get("model")
-                                or device.get("product_name")
-                            ),
-                            "local_key": (
-                                device.get("local_code")
-                                or device.get("local_key")
-                                or device.get("localKey")
-                            ),
-                            "ip": (
-                                device.get("wifi", {}).get("lan_ip")
-                                or device.get("lan_ip")
-                                or device.get("ip")
-                            ),
-                        }
-                        _LOGGER.debug("Extracted device info: %s", device_info)
-
-                        # Only add if we have at least device_id
-                        if device_info["device_id"]:
-                            devices.append(device_info)
-                        else:
-                            _LOGGER.warning("Skipping device without ID: %s", device)
-
-                _LOGGER.info("Found %d devices total from Eufy Cloud", len(devices))
-
-                if not devices:
+                else:
                     _LOGGER.warning(
-                        "No devices found. Response structure: data=%s, items=%s",
-                        data.keys() if isinstance(data, dict) else type(data),
-                        len(items),
+                        "Skipping device without ID or local key: %s",
+                        tuya_device.get("name"),
                     )
 
-                return devices
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Failed to get devices from Eufy Cloud: %s", err)
-            raise
+            _LOGGER.info("Found %d valid devices from Tuya API", len(devices))
+
+            return devices
+
         except Exception as err:
-            _LOGGER.error("Unexpected error getting devices: %s", err)
-            raise
-            raise
-        except Exception as err:
-            _LOGGER.error("Unexpected error getting devices: %s", err)
+            _LOGGER.error("Failed to get devices from Tuya API: %s", err)
             raise
 
 
