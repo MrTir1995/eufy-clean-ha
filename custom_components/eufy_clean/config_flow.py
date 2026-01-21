@@ -30,6 +30,8 @@ async def validate_auth(
         await api.async_login(email, password)
         devices = await api.async_get_devices()
 
+        _LOGGER.debug("Retrieved %d devices from Eufy Cloud", len(devices))
+
         if not devices:
             raise ValueError("No Eufy Clean devices found in account")
 
@@ -43,7 +45,17 @@ async def validate_auth(
             )
         ]
 
+        _LOGGER.debug(
+            "Found %d vacuum devices after filtering: %s",
+            len(vacuum_devices),
+            [d.get("model") for d in vacuum_devices],
+        )
+
         if not vacuum_devices:
+            _LOGGER.warning(
+                "No vacuum devices found. All devices: %s",
+                [{"name": d.get("name"), "model": d.get("model")} for d in devices],
+            )
             raise ValueError("No vacuum devices found")
 
         return {"devices": vacuum_devices}

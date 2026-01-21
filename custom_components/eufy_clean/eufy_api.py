@@ -57,9 +57,12 @@ class EufyCloudAPI:
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
+                _LOGGER.debug("Login response: %s", result)
                 self._token = result.get("access_token")
                 if not self._token:
+                    _LOGGER.error("No access token in response. Full response: %s", result)
                     raise ValueError("No access token in response")
+                _LOGGER.debug("Successfully authenticated, token received")
                 return self._token
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to login to Eufy Cloud: %s", err)
@@ -81,6 +84,7 @@ class EufyCloudAPI:
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
+                _LOGGER.debug("Devices response: %s", result)
 
                 devices = []
                 for item in result.get("data", {}).get("items", []):
@@ -95,8 +99,10 @@ class EufyCloudAPI:
                             or device.get("local_key"),
                             "ip": device.get("wifi", {}).get("lan_ip"),
                         }
+                        _LOGGER.debug("Found device: %s", device_info)
                         devices.append(device_info)
 
+                _LOGGER.info("Found %d devices total", len(devices))
                 return devices
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to get devices from Eufy Cloud: %s", err)
