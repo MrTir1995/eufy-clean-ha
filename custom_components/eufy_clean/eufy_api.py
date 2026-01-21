@@ -43,10 +43,14 @@ class EufyCloudAPI:
 
     async def async_login(self, email: str, password: str) -> str:
         """Login to Eufy Cloud and get access token."""
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "category": "Home",
+            "token": "",
+        }
         data = {
             "client_id": EUFY_CLIENT_ID,
-            "client_secret": EUFY_CLIENT_SECRET,
+            "client_Secret": EUFY_CLIENT_SECRET,
             "email": email,
             "password": password,
         }
@@ -57,28 +61,40 @@ class EufyCloudAPI:
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
+                _LOGGER.debug("Login response keys: %s", result.keys() if isinstance(result, dict) else type(result))
                 _LOGGER.debug("Login response: %s", result)
-                self._token = result.get("access_token")
+                
+                # Eufy Clean API returns access_token in different locations
+                self._token = (
+                    result.get("access_token")
+                    or result.get("data", {}).get("access_token")
+                    or result.get("user_info", {}).get("token")
+                )
+                
                 if not self._token:
                     _LOGGER.error(
                         "No access token in response. Full response: %s", result
                     )
                     raise ValueError("No access token in response")
-                _LOGGER.debug("Successfully authenticated, token received")
+                _LOGGER.debug("Successfully authenticated with Eufy Clean API, token received")
                 return self._token
         except aiohttp.ClientError as err:
-            _LOGGER.error("Failed to login to Eufy Cloud: %s", err)
+            _LOGGER.error("Failed to login to Eufy Clean API: %s", err)
             raise
         except Exception as err:
             _LOGGER.error("Unexpected error during login: %s", err)
             raise
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
-        """Get list of devices from Eufy Cloud."""
+        """Get list of devices from Eufy Clean API."""
         if not self._token:
             raise ValueError("Not authenticated - call async_login first")
 
-        headers = {"token": self._token, "category": "Home"}
+        headers = {
+            "token": self._token,
+            "category": "Home",
+            "Content-Type": "application/json",
+        }
 
         try:
             async with self.session.get(
@@ -86,30 +102,52 @@ class EufyCloudAPI:
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-                _LOGGER.debug("Devices response structure: %s", result.keys() if isinstance(result, dict) else type(result))
+                _LOGGER.debug(
+                    "Devices response structure: %s",
+                    result.keys() if isinstance(result, dict) else type(result),
+                )
                 _LOGGER.debug("Full devices response: %s", result)
 
                 devices = []
+
+                # Eufy Clean API returns devices directly in "data" array
+                # or nested in data.items or data.devices
+                data = result.get("data", [])
                 
-                # Try different response structures
-                data = result.get("data", {})
-                items = data.get("items", [])
-                
-                _LOGGER.debug("Found %d items in response", len(items))
-                
+                # Handle both array and dict responses
+                if isinstance(data, dict):
+                    items = data.get("items", []) or data.get("devices", []) or data.get("device_list", [])
+                elif isinstance(data, list):
+                    items = data
+                else:
+                    items = []
+
+                _LOGGER.debug("Found %d items in Eufy Clean API response", len(items))
+
                 for idx, item in enumerate(items):
-                    _LOGGER.debug("Processing item %d: %s", idx, item.keys() if isinstance(item, dict) else type(item))
-                    
-                    # Try to find device in different locations
+                    _LOGGER.debug(
+                        "Processing item %d: %s",
+                        idx,
+                        item.keys() if isinstance(item, dict) else type(item),
+                    )
+
+                    # Eufy Clean may return devices directly or nested
                     device = None
                     if isinstance(item, dict):
                         device = item.get("device") or item
-                    
+
                     if device:
-                        # Extract device info with fallbacks
+                        # Extract device info with fallbacks for Eufy Clean API
                         device_info = {
-                            "device_id": device.get("id") or device.get("device_id"),
-                            "name": device.get("alias") or device.get("name") or device.get("device_name") or "Unknown",
+                            "device_id": (
+                                device.get("id")
+                                or device.get("device_id")
+                                or device.get("deviceId")
+                            ),
+                            "name": device.get("alias")
+                            or device.get("name")
+                            or device.get("device_name")
+                            or "Unknown",
                             "model": (
                                 device.get("product", {}).get("product_code")
                                 or device.get("product_code")
@@ -128,7 +166,7 @@ class EufyCloudAPI:
                             ),
                         }
                         _LOGGER.debug("Extracted device info: %s", device_info)
-                        
+
                         # Only add if we have at least device_id
                         if device_info["device_id"]:
                             devices.append(device_info)
@@ -136,14 +174,14 @@ class EufyCloudAPI:
                             _LOGGER.warning("Skipping device without ID: %s", device)
 
                 _LOGGER.info("Found %d devices total from Eufy Cloud", len(devices))
-                
+
                 if not devices:
                     _LOGGER.warning(
                         "No devices found. Response structure: data=%s, items=%s",
                         data.keys() if isinstance(data, dict) else type(data),
-                        len(items)
+                        len(items),
                     )
-                
+
                 return devices
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to get devices from Eufy Cloud: %s", err)

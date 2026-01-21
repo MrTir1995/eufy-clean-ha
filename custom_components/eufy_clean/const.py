@@ -18,12 +18,12 @@ DEFAULT_TIMEOUT: Final = 10
 TUYA_PORT: Final = 6668
 TUYA_VERSION: Final = "3.3"
 
-# Eufy Cloud API
-EUFY_API_BASE: Final = "https://home-api.eufylife.com"
-EUFY_API_LOGIN: Final = f"{EUFY_API_BASE}/v1/user/email/login"
-EUFY_API_DEVICES: Final = f"{EUFY_API_BASE}/v1/device/list/devices-and-groups"
-EUFY_CLIENT_ID: Final = "eufyhome-app"
-EUFY_CLIENT_SECRET: Final = "GQCpr9dSp3uQpsOMgJ4xQ"
+# Eufy Cloud API - Eufy Clean App (for RoboVacs)
+EUFY_API_BASE: Final = "https://portal-ww.eufylife.com/app"
+EUFY_API_LOGIN: Final = f"{EUFY_API_BASE}/user/email/login"
+EUFY_API_DEVICES: Final = f"{EUFY_API_BASE}/user/device/all"
+EUFY_CLIENT_ID: Final = "EufyClean-app"
+EUFY_CLIENT_SECRET: Final = "nKbJmGvjmTBJ9bQHpXfX"
 
 # Data Point System (DPS) - Standard Mappings
 DPS_POWER: Final = "1"
