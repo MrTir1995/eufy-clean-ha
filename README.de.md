@@ -81,9 +81,23 @@ Du benötigst deine Eufy-Kontodaten (E-Mail und Passwort). Diese werden **nur ei
 
 - Die Integration erkennt automatisch alle Eufy Clean Geräte in deinem Konto
 - Wähle den Staubsauger aus, den du hinzufügen möchtest
+- Die IP-Adresse wird automatisch gesucht (oder als "Nicht gefunden" angezeigt)
 - Klicke auf "Absenden"
 
-### Schritt 4: IP-Adresse konfigurieren (Optional)
+### Schritt 4: IP-Adresse eingeben (Falls erforderlich)
+
+Wenn die automatische IP-Erkennung fehlschlägt, wirst du aufgefordert, die IP-Adresse manuell einzugeben:
+
+1. Finde die IP-Adresse deines Staubsaugers:
+   - In der Eufy Clean App
+   - In deinem Router (z.B. FRITZ!Box, Speedport)
+   - Mit einem Netzwerk-Scanner
+2. Gib die IP-Adresse ein (z.B. `192.168.1.100`)
+3. Klicke auf "Absenden"
+
+> **💡 Tipp**: Vergib deinem Staubsauger eine feste IP-Adresse in deinem Router, damit sie sich nicht ändert.
+
+### IP-Adresse später ändern
 
 Wenn sich die IP-Adresse deines Staubsaugers ändert, kannst du sie in den Integrationsoptionen aktualisieren:
 
@@ -183,14 +197,28 @@ entities:
 
 ## 🔧 Fehlerbehebung
 
-### Verbindungsprobleme
+Für eine vollständige Anleitung zur Fehlerbehebung, siehe [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+
+### Häufige Probleme
+
+**Problem**: "Device Unreachable (Error 905)"
+
+**Lösungen**:
+1. **Gerät eingeschaltet**: Stelle sicher, dass der Staubsauger eingeschaltet ist
+2. **WLAN-Verbindung**: Prüfe, ob das Gerät mit dem WLAN verbunden ist (Eufy Clean App)
+3. **IP-Adresse korrekt**: Überprüfe die IP-Adresse in den Integrationseinstellungen
+4. **Feste IP vergeben**: Empfohlen - vergib eine feste IP-Adresse im Router (DHCP-Reservierung)
+5. **Firewall**: Stelle sicher, dass Port 6668 nicht blockiert wird
+6. **Netzwerk-Test**: Pinge das Gerät an: `ping <IP-ADRESSE>`
+
+---
 
 **Problem**: "Verbindung zur Eufy Cloud fehlgeschlagen" während der Einrichtung
 
 **Lösungen**:
 - Überprüfe, ob deine Eufy-Kontodaten korrekt sind
 - Stelle sicher, dass du während der Einrichtung eine aktive Internetverbindung hast
-- Prüfe, ob dein Eufy-Konto Geräte in der Eufy Home App registriert hat
+- Prüfe, ob dein Eufy-Konto Geräte in der Eufy Clean App registriert hat
 
 ---
 
@@ -201,9 +229,19 @@ entities:
 2. **IP-Adresse überprüfen**: Die IP-Adresse des Staubsaugers könnte sich geändert haben
    - Prüfe die DHCP-Leases deines Routers
    - Aktualisiere die IP-Adresse in den Integrationsoptionen
+   - **Empfohlen**: Vergib eine feste IP im Router
 3. **Einzel-Verbindungs-Limit**: Eufy-Staubsauger erlauben oft nur eine TCP-Verbindung gleichzeitig
-   - Schließe die Eufy Home App auf allen Geräten (Force Close)
+   - Schließe die Eufy Clean App auf allen Geräten (Force Close)
    - Starte die Integration in Home Assistant neu
+
+---
+
+**Problem**: "Keine Geräte gefunden"
+
+**Lösungen**:
+- Stelle sicher, dass dein Staubsauger in der **Eufy Clean App** (nicht Eufy Home) registriert ist
+- Die Integration unterstützt nur RoboVac-Geräte
+- Melde dich bei der Eufy Clean App an und prüfe, ob das Gerät dort sichtbar ist
 4. **Netzwerk-Isolation**: Stelle sicher, dass dein Staubsauger und Home Assistant im selben Netzwerk sind oder kommunizieren können
 
 ### IP-Adresse statisch machen
