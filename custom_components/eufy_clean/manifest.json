@@ -14,5 +14,5 @@
         "tinytuya==1.13.2",
         "aiohttp==3.9.1"
     ],
-    "version": "1.0.0"
+    "version": "1.0.1"
 }
