@@ -18,11 +18,27 @@ DEFAULT_TIMEOUT: Final = 10
 TUYA_PORT: Final = 6668
 TUYA_VERSION: Final = "3.3"
 
-# Eufy Cloud API - Eufy Clean App (for RoboVacs)
+# Eufy Cloud API - Multiple client versions for compatibility
 EUFY_API_BASE: Final = "https://api.eufylife.com"
 EUFY_API_LOGIN: Final = f"{EUFY_API_BASE}/v1/user/email/login"
 EUFY_API_DEVICES: Final = f"{EUFY_API_BASE}/v1/device/v2/list"
-EUFY_CLIENT_ID: Final = "EufyHome-Android-2.4.0"
+
+# Try multiple client credentials (Eufy has multiple apps)
+EUFY_CLIENTS: Final = [
+    {
+        "client_id": "eufyhome-app",
+        "client_secret": "GQCpr9dSp3uQpsOMgJ4xQ",
+        "name": "EufyHome",
+    },
+    {
+        "client_id": "eufyhome_app",
+        "client_secret": "GQCpr9dSp3uQpsOMgJ4xQ",
+        "name": "EufyHome Alt",
+    },
+]
+
+# Default client (for backwards compatibility)
+EUFY_CLIENT_ID: Final = "eufyhome-app"
 EUFY_CLIENT_SECRET: Final = "GQCpr9dSp3uQpsOMgJ4xQ"
 
 # Data Point System (DPS) - Standard Mappings

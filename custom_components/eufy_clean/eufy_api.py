@@ -21,6 +21,7 @@ from .const import (
     EUFY_API_LOGIN,
     EUFY_CLIENT_ID,
     EUFY_CLIENT_SECRET,
+    EUFY_CLIENTS,
     STATE_CHARGING,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -42,51 +43,66 @@ class EufyCloudAPI:
         self._token: str | None = None
 
     async def async_login(self, email: str, password: str) -> str:
-        """Login to Eufy Cloud and get access token."""
+        """Login to Eufy Cloud and get access token. Tries multiple client credentials."""
         headers = {
             "Content-Type": "application/json",
         }
-        data = {
-            "client_id": EUFY_CLIENT_ID,
-            "client_secret": EUFY_CLIENT_SECRET,
-            "email": email,
-            "password": password,
-        }
+        
+        # Try multiple client credentials
+        last_error = None
+        for client in EUFY_CLIENTS:
+            data = {
+                "client_id": client["client_id"],
+                "client_secret": client["client_secret"],
+                "email": email,
+                "password": password,
+            }
+            
+            _LOGGER.debug("Attempting login with client: %s", client["name"])
 
-        try:
-            async with self.session.post(
-                EUFY_API_LOGIN, json=data, headers=headers, timeout=10
-            ) as response:
-                response.raise_for_status()
-                result = await response.json()
-                _LOGGER.debug(
-                    "Login response keys: %s",
-                    result.keys() if isinstance(result, dict) else type(result),
-                )
-                _LOGGER.debug("Login response: %s", result)
-
-                # Eufy Clean API returns access_token in different locations
-                self._token = (
-                    result.get("access_token")
-                    or result.get("data", {}).get("access_token")
-                    or result.get("user_info", {}).get("token")
-                )
-
-                if not self._token:
-                    _LOGGER.error(
-                        "No access token in response. Full response: %s", result
+            try:
+                async with self.session.post(
+                    EUFY_API_LOGIN, json=data, headers=headers, timeout=10
+                ) as response:
+                    result = await response.json()
+                    
+                    # Check for error in response
+                    if result.get("error"):
+                        error_msg = result.get("message", {}).get("message", result.get("error_description"))
+                        _LOGGER.debug("Client %s failed: %s", client["name"], error_msg)
+                        last_error = error_msg
+                        continue
+                    
+                    # Try to extract token
+                    self._token = (
+                        result.get("access_token")
+                        or result.get("data", {}).get("access_token")
+                        or result.get("user_info", {}).get("token")
                     )
-                    raise ValueError("No access token in response")
+
+                    if self._token:
+                        _LOGGER.info(
+                            "Successfully authenticated with Eufy API using client: %s",
+                            client["name"],
+                        )
+                        return self._token
+                    else:
+                        _LOGGER.debug(
+                            "No token in response from client %s", client["name"]
+                        )
+                        last_error = "No access token in response"
+
+            except aiohttp.ClientError as err:
                 _LOGGER.debug(
-                    "Successfully authenticated with Eufy Clean API, token received"
+                    "Client %s connection error: %s", client["name"], err
                 )
-                return self._token
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Failed to login to Eufy Clean API: %s", err)
-            raise
-        except Exception as err:
-            _LOGGER.error("Unexpected error during login: %s", err)
-            raise
+                last_error = str(err)
+                continue
+
+        # All clients failed
+        error_msg = f"Failed to authenticate with any Eufy client. Last error: {last_error}"
+        _LOGGER.error(error_msg)
+        raise ValueError(error_msg)
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Get list of devices from Eufy Clean API."""
