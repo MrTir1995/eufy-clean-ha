@@ -172,17 +172,16 @@ class EufyCleanOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        # Get current device IP from config entry
+        current_ip = self.config_entry.data.get(CONF_DEVICE_IP)
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_DEVICE_IP,
-                        description={
-                            "suggested_value": self.config_entry.data.get(
-                                CONF_DEVICE_IP
-                            )
-                        },
+                        description={"suggested_value": current_ip},
                     ): str,
                 }
             ),
