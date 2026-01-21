@@ -27,7 +27,7 @@
         "error": {
             "cannot_connect": "Failed to connect to Eufy Cloud. Please check your credentials.",
             "invalid_ip": "Invalid IP address. Please enter a valid IPv4 address.",
-            "not_local_ip": "Public IP address detected. Please enter the LOCAL/PRIVATE IP address of your device in your home network. Accepted: 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 169.254.x.x (Link-Local), NOT the public internet IP address.",
+            "not_local_ip": "Public IP address detected. Please enter the LOCAL/PRIVATE IP address of your device in your home network. Accepted: 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 192.0.0.x, 169.254.x.x (Link-Local), NOT the public internet IP address.",
             "unknown": "An unexpected error occurred."
         },
         "abort": {

@@ -26,6 +26,7 @@ def is_local_ip(ip_str: str) -> bool:
     - 10.0.0.0/8 (255.0.0.0)
     - 172.16.0.0/12 (255.240.0.0)
     - 192.168.0.0/16 (255.255.0.0)
+    - 192.0.0.0/24 (IETF Protocol Assignments)
     - 169.254.0.0/16 (Link-Local)
     - 127.0.0.0/8 (Loopback)
     """
@@ -45,6 +46,12 @@ def is_local_ip(ip_str: str) -> bool:
         # Check if loopback (127.x.x.x)
         if ip_obj.is_loopback:
             return True
+        
+        # Check for 192.0.0.0/24 (IETF Protocol Assignments)
+        if isinstance(ip_obj, ipaddress.IPv4Address):
+            network_192_0_0 = ipaddress.IPv4Network('192.0.0.0/24')
+            if ip_obj in network_192_0_0:
+                return True
         
         return False
     except ValueError:
