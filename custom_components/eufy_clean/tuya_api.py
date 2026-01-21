@@ -22,7 +22,7 @@ from .const import (
     TUYA_HMAC_KEY,
     TUYA_SIGNATURE_PARAMS,
 )
-from .tuya_crypto import get_tuya_password_cipher, shuffled_md5
+from .tuya_crypto import get_tuya_password_cipher, shuffled_md5, unpadded_rsa
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,6 +171,12 @@ class TuyaAPIClient:
                 response.raise_for_status()
                 result = await response.json()
 
+                # Check for Tuya API errors
+                if not result.get("success", True):
+                    error_code = result.get("errorCode", "UNKNOWN")
+                    error_msg = result.get("errorMsg", "Unknown error")
+                    raise ValueError(f"Tuya API error [{error_code}]: {error_msg}")
+
                 if "result" not in result:
                     raise ValueError(f"No 'result' key in Tuya API response: {result}")
 
@@ -188,12 +194,18 @@ class TuyaAPIClient:
             requires_session=False,
         )
 
-    def _determine_password(self, username: str) -> bytes:
+    def _determine_password(self, username: str) -> str:
         """
         Determine password for Tuya authentication.
 
-        The password is the username padded and encrypted with AES.
+        The password is:
+        1. Username padded to multiple of 16
+        2. AES-encrypted
+        3. Hex-encoded and uppercased
+        4. MD5-hashed
         """
+        from hashlib import md5
+
         # Pad username to multiple of 16
         padded_size = 16 * math.ceil(len(username) / 16)
         password_uid = username.zfill(padded_size)
@@ -204,7 +216,11 @@ class TuyaAPIClient:
         encrypted_uid = encryptor.update(password_uid.encode("utf-8"))
         encrypted_uid += encryptor.finalize()
 
-        return encrypted_uid
+        # Hex encode, uppercase, and MD5 hash
+        hex_password = encrypted_uid.hex().upper()
+        hashed_password = md5(hex_password.encode("utf-8")).hexdigest()
+
+        return hashed_password
 
     async def acquire_session(self) -> None:
         """Acquire a session from Tuya API."""
@@ -218,12 +234,30 @@ class TuyaAPIClient:
         # Request token
         token_response = await self.request_token(self.username, self.country_code)
         token = token_response.get("token")
+        public_key = token_response.get("publicKey")
+        exponent = token_response.get("exponent")
 
-        if not token:
-            raise ValueError("Failed to get token from Tuya API")
+        if not token or not public_key or not exponent:
+            raise ValueError(
+                f"Missing token data from Tuya API. Got: {token_response.keys()}"
+            )
 
-        # Determine password
+        # Determine password (MD5-hashed AES-encrypted username)
         password = self._determine_password(self.username)
+
+        # Encrypt password with RSA using public key from token response
+        encrypted_password = await asyncio.get_event_loop().run_in_executor(
+            None,
+            unpadded_rsa,
+            int(exponent),
+            int(public_key),
+            password.encode("utf-8"),
+        )
+
+        _LOGGER.debug(
+            "Using RSA-encrypted password (length: %d bytes)",
+            len(encrypted_password),
+        )
 
         # Login with encrypted password
         login_response = await self._request(
@@ -232,7 +266,7 @@ class TuyaAPIClient:
                 "uid": self.username,
                 "createGroup": True,
                 "ifencrypt": 1,
-                "passwd": password.hex(),
+                "passwd": encrypted_password.hex(),
                 "countryCode": self.country_code,
                 "options": '{"group": 1}',
                 "token": token,
