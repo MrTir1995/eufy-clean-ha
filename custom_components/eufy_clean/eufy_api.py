@@ -17,6 +17,7 @@ from .const import (
     DPS_POWER,
     DPS_RETURN_HOME,
     DPS_STATUS,
+    EUFY_API_BASE,
     EUFY_API_DEVICES,
     EUFY_API_LOGIN,
     EUFY_CLIENT_ID,
@@ -41,6 +42,8 @@ class EufyCloudAPI:
         """Initialize the Eufy Cloud API client."""
         self.session = session
         self._token: str | None = None
+        self._base_url: str = EUFY_API_BASE
+        self._user_id: str | None = None
 
     async def async_login(self, email: str, password: str) -> str:
         """Login to Eufy Cloud and get access token. Tries multiple client credentials."""
@@ -61,8 +64,10 @@ class EufyCloudAPI:
             _LOGGER.debug("Attempting login with client: %s", client["name"])
 
             try:
+                # Verwende base_url + relativen Pfad
+                url = f"{self._base_url}{EUFY_API_LOGIN}"
                 async with self.session.post(
-                    EUFY_API_LOGIN, json=data, headers=headers, timeout=10
+                    url, json=data, headers=headers, timeout=10
                 ) as response:
                     result = await response.json()
                     
@@ -81,6 +86,16 @@ class EufyCloudAPI:
                     )
 
                     if self._token:
+                        # Extrahiere user_id und request_host für weitere Requests
+                        user_info = result.get("user_info", {})
+                        self._user_id = user_info.get("id")
+                        request_host = user_info.get("request_host")
+                        
+                        # Wenn eine spezifische request_host zurückgegeben wird, verwende diese
+                        if request_host:
+                            self._base_url = request_host
+                            _LOGGER.debug("Using regional API server: %s", request_host)
+                        
                         _LOGGER.info(
                             "Successfully authenticated with Eufy API using client: %s",
                             client["name"],
@@ -109,15 +124,26 @@ class EufyCloudAPI:
         if not self._token:
             raise ValueError("Not authenticated - call async_login first")
 
+        # Header wie in der offiziellen App
         headers = {
             "token": self._token,
+            "uid": self._user_id or "",
             "category": "Home",
-            "Content-Type": "application/json",
+            "User-Agent": "EufyHome-Android-2.4.0",
+            "timezone": "Europe/Berlin",
+            "openudid": "sdk_gphone64_arm64",
+            "clientType": "2",
+            "language": "de",
+            "country": "DE",
+            "Accept-Encoding": "gzip",
         }
 
         try:
+            # Verwende base_url + relativen Pfad
+            url = f"{self._base_url}{EUFY_API_DEVICES}"
+            _LOGGER.debug("Fetching devices from: %s", url)
             async with self.session.get(
-                EUFY_API_DEVICES, headers=headers, timeout=10
+                url, headers=headers, timeout=10
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
