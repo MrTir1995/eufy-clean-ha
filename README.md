@@ -119,7 +119,8 @@ service: vacuum.set_fan_speed
 target:
   entity_id: vacuum.eufy_robovac
 data:
-  fan_speed: "Turbo"  # Options: Quiet, Standard, Turbo, Max
+  # Options: Quiet, Standard, Turbo, Max
+  fan_speed: "Turbo"
 ```
 
 ### Automation Example

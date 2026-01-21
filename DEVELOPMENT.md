@@ -19,7 +19,7 @@ Entwicklungsumgebung für eine Home Assistant Custom Integration zur lokalen Ste
 
 1. **Repository in VS Code öffnen**
    ```bash
-   code /home/timo/Dokumente/Github/eufy_HA
+   code <path-to-repository>
    ```
 
 2. **Devcontainer öffnen**
