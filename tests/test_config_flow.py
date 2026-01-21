@@ -161,4 +161,3 @@ async def test_options_flow(hass):
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     # IP is now stored in config entry data, not options data
     assert entry.data["device_ip"] == "192.168.1.101"
-

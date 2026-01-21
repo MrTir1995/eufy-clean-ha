@@ -21,38 +21,37 @@ _LOGGER = logging.getLogger(__name__)
 
 def is_local_ip(ip_str: str) -> bool:
     """Check if IP address is local/private.
-    
+
     Accepts:
     - 10.0.0.0/8 (255.0.0.0)
     - 172.16.0.0/12 (255.240.0.0)
-    - 192.168.0.0/16 (255.255.0.0)
-    - 192.0.0.0/24 (IETF Protocol Assignments)
+    - 192.0.0.0/8 (entire 192.x.x.x range)
     - 169.254.0.0/16 (Link-Local)
     - 127.0.0.0/8 (Loopback)
     """
     import ipaddress
-    
+
     try:
         ip_obj = ipaddress.ip_address(ip_str)
-        
+
         # Check if private (10.x.x.x, 172.16-31.x.x, 192.168.x.x)
         if ip_obj.is_private:
             return True
-        
+
         # Check if link-local (169.254.x.x)
         if ip_obj.is_link_local:
             return True
-        
+
         # Check if loopback (127.x.x.x)
         if ip_obj.is_loopback:
             return True
-        
-        # Check for 192.0.0.0/24 (IETF Protocol Assignments)
+
+        # Check for entire 192.0.0.0/8 range (192.x.x.x)
         if isinstance(ip_obj, ipaddress.IPv4Address):
-            network_192_0_0 = ipaddress.IPv4Network('192.0.0.0/24')
-            if ip_obj in network_192_0_0:
+            network_192 = ipaddress.IPv4Network("192.0.0.0/8")
+            if ip_obj in network_192:
                 return True
-        
+
         return False
     except ValueError:
         return False
@@ -249,7 +248,7 @@ class EufyCleanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 ipaddress.ip_address(device_ip)
-                
+
                 # Check if it's a local IP address
                 if not is_local_ip(device_ip):
                     errors["base"] = "not_local_ip"
@@ -320,16 +319,16 @@ class EufyCleanOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             device_ip = user_input.get(CONF_DEVICE_IP)
-            
+
             if device_ip:
                 device_ip = device_ip.strip()
-                
+
                 # Validate IP format
                 import ipaddress
-                
+
                 try:
                     ipaddress.ip_address(device_ip)
-                    
+
                     # Check if it's a local IP address
                     if not is_local_ip(device_ip):
                         errors["base"] = "not_local_ip"
