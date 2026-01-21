@@ -51,9 +51,11 @@ async def main():
             if not devices:
                 print("\n   ⚠ No devices found in your account!")
                 print("   This could mean:")
-                print("   - Your robots are not linked to this Eufy account")
-                print("   - The Eufy Cloud API has changed")
-                print("   - The robots are not online/registered properly")
+                print("   - Your robots are in the Tuya API, not Eufy API")
+                print("   - The robots are not linked to this account")
+                print("   - The robots need to be added via Eufy Home app first")
+                print("\n   💡 Eufy verwendet intern die Tuya API für Geräte.")
+                print("   Versuchen Sie, die Geräte in der Eufy Home App zu registrieren.")
                 return False
 
             print("\n" + "=" * 70)
