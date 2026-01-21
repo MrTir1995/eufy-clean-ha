@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
+from urllib.parse import urljoin
 
 import aiohttp
 import tinytuya
@@ -20,8 +21,6 @@ from .const import (
     EUFY_API_BASE,
     EUFY_API_DEVICES,
     EUFY_API_LOGIN,
-    EUFY_CLIENT_ID,
-    EUFY_CLIENT_SECRET,
     EUFY_CLIENTS,
     STATE_CHARGING,
     STATE_CLEANING,
@@ -50,7 +49,7 @@ class EufyCloudAPI:
         headers = {
             "Content-Type": "application/json",
         }
-        
+
         # Try multiple client credentials
         last_error = None
         for client in EUFY_CLIENTS:
@@ -60,24 +59,27 @@ class EufyCloudAPI:
                 "email": email,
                 "password": password,
             }
-            
+
             _LOGGER.debug("Attempting login with client: %s", client["name"])
 
             try:
-                # Verwende base_url + relativen Pfad
-                url = f"{self._base_url}{EUFY_API_LOGIN}"
+                # Verwende urljoin für sichere URL-Konstruktion
+                url = urljoin(self._base_url, EUFY_API_LOGIN)
+                _LOGGER.debug("Login URL: %s", url)
                 async with self.session.post(
                     url, json=data, headers=headers, timeout=10
                 ) as response:
                     result = await response.json()
-                    
+
                     # Check for error in response
                     if result.get("error"):
-                        error_msg = result.get("message", {}).get("message", result.get("error_description"))
+                        error_msg = result.get("message", {}).get(
+                            "message", result.get("error_description")
+                        )
                         _LOGGER.debug("Client %s failed: %s", client["name"], error_msg)
                         last_error = error_msg
                         continue
-                    
+
                     # Try to extract token
                     self._token = (
                         result.get("access_token")
@@ -90,12 +92,17 @@ class EufyCloudAPI:
                         user_info = result.get("user_info", {})
                         self._user_id = user_info.get("id")
                         request_host = user_info.get("request_host")
-                        
+
                         # Wenn eine spezifische request_host zurückgegeben wird, verwende diese
                         if request_host:
+                            # Stelle sicher, dass URL mit /v1/ endet
+                            if not request_host.endswith("/"):
+                                request_host = request_host + "/"
+                            if not request_host.endswith("/v1/"):
+                                request_host = request_host + "v1/"
                             self._base_url = request_host
                             _LOGGER.debug("Using regional API server: %s", request_host)
-                        
+
                         _LOGGER.info(
                             "Successfully authenticated with Eufy API using client: %s",
                             client["name"],
@@ -108,14 +115,14 @@ class EufyCloudAPI:
                         last_error = "No access token in response"
 
             except aiohttp.ClientError as err:
-                _LOGGER.debug(
-                    "Client %s connection error: %s", client["name"], err
-                )
+                _LOGGER.debug("Client %s connection error: %s", client["name"], err)
                 last_error = str(err)
                 continue
 
         # All clients failed
-        error_msg = f"Failed to authenticate with any Eufy client. Last error: {last_error}"
+        error_msg = (
+            f"Failed to authenticate with any Eufy client. Last error: {last_error}"
+        )
         _LOGGER.error(error_msg)
         raise ValueError(error_msg)
 
@@ -139,12 +146,10 @@ class EufyCloudAPI:
         }
 
         try:
-            # Verwende base_url + relativen Pfad
-            url = f"{self._base_url}{EUFY_API_DEVICES}"
+            # Verwende urljoin für sichere URL-Konstruktion
+            url = urljoin(self._base_url, EUFY_API_DEVICES)
             _LOGGER.debug("Fetching devices from: %s", url)
-            async with self.session.get(
-                url, headers=headers, timeout=10
-            ) as response:
+            async with self.session.get(url, headers=headers, timeout=10) as response:
                 response.raise_for_status()
                 result = await response.json()
                 _LOGGER.debug(
