@@ -15,10 +15,18 @@
                 "data": {
                     "device": "Gerät"
                 }
+            },
+            "ip": {
+                "title": "IP-Adresse eingeben",
+                "description": "Die IP-Adresse für {device_name} konnte nicht automatisch gefunden werden. Bitte geben Sie die lokale IP-Adresse des Geräts manuell ein (z.B. 192.168.1.100).",
+                "data": {
+                    "device_ip": "IP-Adresse"
+                }
             }
         },
         "error": {
             "cannot_connect": "Verbindung zur Eufy Cloud fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.",
+            "invalid_ip": "Ungültige IP-Adresse. Bitte geben Sie eine gültige IPv4-Adresse ein.",
             "unknown": "Ein unerwarteter Fehler ist aufgetreten."
         },
         "abort": {

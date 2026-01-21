@@ -67,6 +67,35 @@ async def validate_auth(
         raise
 
 
+async def discover_device_ip(hass: HomeAssistant, device_id: str) -> str | None:
+    """Try to discover device IP on local network using tinytuya scanner."""
+    try:
+        import tinytuya
+
+        _LOGGER.info("Scanning local network for device %s...", device_id)
+
+        # Run scanner in executor to avoid blocking
+        def scan():
+            devices = tinytuya.deviceScan(False, 20)
+            return devices
+
+        devices = await hass.async_add_executor_job(scan)
+
+        # Look for our device
+        for dev in devices:
+            if dev.get("id") == device_id or dev.get("gwId") == device_id:
+                ip = dev.get("ip")
+                if ip:
+                    _LOGGER.info("Found device %s at IP %s", device_id, ip)
+                    return ip
+
+        _LOGGER.warning("Device %s not found on local network", device_id)
+        return None
+    except Exception as err:
+        _LOGGER.warning("Failed to scan for devices: %s", err)
+        return None
+
+
 class EufyCleanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Eufy Clean."""
 
@@ -77,6 +106,7 @@ class EufyCleanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._devices: list[dict[str, Any]] = []
         self._email: str | None = None
         self._password: str | None = None
+        self._selected_device: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -132,11 +162,28 @@ class EufyCleanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 None,
             )
             if device:
+                # Check if device has IP address
+                if not device.get("ip"):
+                    # Try to discover IP automatically
+                    _LOGGER.info("Device IP missing, scanning network...")
+                    discovered_ip = await discover_device_ip(
+                        self.hass, device["device_id"]
+                    )
+                    if discovered_ip:
+                        device["ip"] = discovered_ip
+                        _LOGGER.info("Found device at %s", discovered_ip)
+                        return await self._create_entry(device)
+                    else:
+                        # IP not found, ask user for manual input
+                        self._selected_device = device
+                        return await self.async_step_ip()
                 return await self._create_entry(device)
 
         # Create device selection options
         device_options = {
-            device["device_id"]: f"{device['name']} ({device['model']})"
+            device[
+                "device_id"
+            ]: f"{device['name']} ({device['model']}) - IP: {device.get('ip', 'Nicht gefunden')}"
             for device in self._devices
         }
 
@@ -147,6 +194,46 @@ class EufyCleanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required("device"): vol.In(device_options),
                 }
             ),
+        )
+
+    async def async_step_ip(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle IP address input for devices without auto-discovered IP."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            device_ip = user_input[CONF_DEVICE_IP].strip()
+
+            # Validate IP format (basic check)
+            import ipaddress
+
+            try:
+                ipaddress.ip_address(device_ip)
+                # Add IP to device and create entry
+                if self._selected_device:
+                    self._selected_device["ip"] = device_ip
+                    return await self._create_entry(self._selected_device)
+            except ValueError:
+                errors["base"] = "invalid_ip"
+
+        device_name = (
+            self._selected_device.get("name", "Gerät")
+            if self._selected_device
+            else "Gerät"
+        )
+
+        return self.async_show_form(
+            step_id="ip",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE_IP): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "device_name": device_name,
+            },
         )
 
     async def _create_entry(self, device: dict[str, Any]) -> FlowResult:

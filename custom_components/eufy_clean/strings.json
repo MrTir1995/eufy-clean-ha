@@ -15,10 +15,18 @@
                 "data": {
                     "device": "Device"
                 }
+            },
+            "ip": {
+                "title": "Enter IP Address",
+                "description": "The IP address for {device_name} could not be automatically discovered. Please enter the local IP address of the device manually (e.g. 192.168.1.100).",
+                "data": {
+                    "device_ip": "IP Address"
+                }
             }
         },
         "error": {
             "cannot_connect": "Failed to connect to Eufy Cloud. Please check your credentials.",
+            "invalid_ip": "Invalid IP address. Please enter a valid IPv4 address.",
             "unknown": "An unexpected error occurred."
         },
         "abort": {
