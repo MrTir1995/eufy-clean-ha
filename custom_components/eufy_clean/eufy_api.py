@@ -45,12 +45,10 @@ class EufyCloudAPI:
         """Login to Eufy Cloud and get access token."""
         headers = {
             "Content-Type": "application/json",
-            "category": "Home",
-            "token": "",
         }
         data = {
             "client_id": EUFY_CLIENT_ID,
-            "client_Secret": EUFY_CLIENT_SECRET,
+            "client_secret": EUFY_CLIENT_SECRET,
             "email": email,
             "password": password,
         }
@@ -61,22 +59,27 @@ class EufyCloudAPI:
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-                _LOGGER.debug("Login response keys: %s", result.keys() if isinstance(result, dict) else type(result))
+                _LOGGER.debug(
+                    "Login response keys: %s",
+                    result.keys() if isinstance(result, dict) else type(result),
+                )
                 _LOGGER.debug("Login response: %s", result)
-                
+
                 # Eufy Clean API returns access_token in different locations
                 self._token = (
                     result.get("access_token")
                     or result.get("data", {}).get("access_token")
                     or result.get("user_info", {}).get("token")
                 )
-                
+
                 if not self._token:
                     _LOGGER.error(
                         "No access token in response. Full response: %s", result
                     )
                     raise ValueError("No access token in response")
-                _LOGGER.debug("Successfully authenticated with Eufy Clean API, token received")
+                _LOGGER.debug(
+                    "Successfully authenticated with Eufy Clean API, token received"
+                )
                 return self._token
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to login to Eufy Clean API: %s", err)
@@ -113,10 +116,14 @@ class EufyCloudAPI:
                 # Eufy Clean API returns devices directly in "data" array
                 # or nested in data.items or data.devices
                 data = result.get("data", [])
-                
+
                 # Handle both array and dict responses
                 if isinstance(data, dict):
-                    items = data.get("items", []) or data.get("devices", []) or data.get("device_list", [])
+                    items = (
+                        data.get("items", [])
+                        or data.get("devices", [])
+                        or data.get("device_list", [])
+                    )
                 elif isinstance(data, list):
                     items = data
                 else:
