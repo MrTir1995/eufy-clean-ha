@@ -33,7 +33,7 @@ async def main():
         print("\n1. Testing login...")
         try:
             token = await api.async_login(email, password)
-            print(f"   ✓ Login successful!")
+            print("   ✓ Login successful!")
             print(f"   Token (first 20 chars): {token[:20]}...")
         except Exception as e:
             print(f"   ✗ Login failed: {e}")
@@ -90,7 +90,9 @@ async def main():
                 print("\nYour device models:")
                 for device in devices:
                     print(f"  - {device.get('model')}")
-                print("\nThe filter looks for models containing: robovac, t, l, x, g, e")
+                print(
+                    "\nThe filter looks for models containing: robovac, t, l, x, g, e"
+                )
                 print("\nYour RoboVac G10 Hybrid and L60 SES should match!")
                 print("The API might be returning different model names.")
                 return False

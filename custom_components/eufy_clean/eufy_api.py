@@ -60,7 +60,9 @@ class EufyCloudAPI:
                 _LOGGER.debug("Login response: %s", result)
                 self._token = result.get("access_token")
                 if not self._token:
-                    _LOGGER.error("No access token in response. Full response: %s", result)
+                    _LOGGER.error(
+                        "No access token in response. Full response: %s", result
+                    )
                     raise ValueError("No access token in response")
                 _LOGGER.debug("Successfully authenticated, token received")
                 return self._token
@@ -84,28 +86,71 @@ class EufyCloudAPI:
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-                _LOGGER.debug("Devices response: %s", result)
+                _LOGGER.debug("Devices response structure: %s", result.keys() if isinstance(result, dict) else type(result))
+                _LOGGER.debug("Full devices response: %s", result)
 
                 devices = []
-                for item in result.get("data", {}).get("items", []):
-                    if item.get("device"):
-                        device = item["device"]
-                        # Extract device info
+                
+                # Try different response structures
+                data = result.get("data", {})
+                items = data.get("items", [])
+                
+                _LOGGER.debug("Found %d items in response", len(items))
+                
+                for idx, item in enumerate(items):
+                    _LOGGER.debug("Processing item %d: %s", idx, item.keys() if isinstance(item, dict) else type(item))
+                    
+                    # Try to find device in different locations
+                    device = None
+                    if isinstance(item, dict):
+                        device = item.get("device") or item
+                    
+                    if device:
+                        # Extract device info with fallbacks
                         device_info = {
-                            "device_id": device.get("id"),
-                            "name": device.get("alias") or device.get("name"),
-                            "model": device.get("product", {}).get("product_code"),
-                            "local_key": device.get("local_code")
-                            or device.get("local_key"),
-                            "ip": device.get("wifi", {}).get("lan_ip"),
+                            "device_id": device.get("id") or device.get("device_id"),
+                            "name": device.get("alias") or device.get("name") or device.get("device_name") or "Unknown",
+                            "model": (
+                                device.get("product", {}).get("product_code")
+                                or device.get("product_code")
+                                or device.get("model")
+                                or device.get("product_name")
+                            ),
+                            "local_key": (
+                                device.get("local_code")
+                                or device.get("local_key")
+                                or device.get("localKey")
+                            ),
+                            "ip": (
+                                device.get("wifi", {}).get("lan_ip")
+                                or device.get("lan_ip")
+                                or device.get("ip")
+                            ),
                         }
-                        _LOGGER.debug("Found device: %s", device_info)
-                        devices.append(device_info)
+                        _LOGGER.debug("Extracted device info: %s", device_info)
+                        
+                        # Only add if we have at least device_id
+                        if device_info["device_id"]:
+                            devices.append(device_info)
+                        else:
+                            _LOGGER.warning("Skipping device without ID: %s", device)
 
-                _LOGGER.info("Found %d devices total", len(devices))
+                _LOGGER.info("Found %d devices total from Eufy Cloud", len(devices))
+                
+                if not devices:
+                    _LOGGER.warning(
+                        "No devices found. Response structure: data=%s, items=%s",
+                        data.keys() if isinstance(data, dict) else type(data),
+                        len(items)
+                    )
+                
                 return devices
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to get devices from Eufy Cloud: %s", err)
+            raise
+        except Exception as err:
+            _LOGGER.error("Unexpected error getting devices: %s", err)
+            raise
             raise
         except Exception as err:
             _LOGGER.error("Unexpected error getting devices: %s", err)
