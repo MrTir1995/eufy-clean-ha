@@ -32,12 +32,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Test connection
     try:
+        _LOGGER.info(
+            "Testing connection to device at %s (ID: %s)",
+            entry.data[CONF_DEVICE_IP],
+            entry.data[CONF_DEVICE_ID],
+        )
         await api.async_connect()
         status = await api.async_get_status()
         if status is None:
-            raise ConfigEntryNotReady("Unable to connect to device")
+            error_msg = (
+                f"Unable to connect to device at {entry.data[CONF_DEVICE_IP]}. "
+                "Please check: 1) Device is powered on, "
+                "2) Device is connected to WiFi, "
+                f"3) IP address {entry.data[CONF_DEVICE_IP]} is correct, "
+                "4) Device and Home Assistant are on the same network"
+            )
+            _LOGGER.error(error_msg)
+            raise ConfigEntryNotReady(error_msg)
+        _LOGGER.info("Successfully connected to device")
     except Exception as err:
-        _LOGGER.error("Error connecting to Eufy Clean device: %s", err)
+        _LOGGER.error(
+            "Error connecting to Eufy Clean device at %s: %s",
+            entry.data.get(CONF_DEVICE_IP, "unknown"),
+            err,
+        )
         raise ConfigEntryNotReady from err
 
     # Create coordinator

@@ -234,7 +234,17 @@ class EufyCleanAPI:
                 )
 
                 if not status or "dps" not in status:
-                    _LOGGER.warning("Invalid status response: %s", status)
+                    # Check if it's a device unreachable error
+                    if isinstance(status, dict) and status.get("Err") == "905":
+                        _LOGGER.error(
+                            "Device unreachable at %s. Please verify: "
+                            "1) Device is powered on and connected to WiFi, "
+                            "2) IP address is correct, "
+                            "3) Device is on the same network as Home Assistant",
+                            self._device_ip,
+                        )
+                    else:
+                        _LOGGER.warning("Invalid status response: %s", status)
                     return None
 
                 dps = status["dps"]
@@ -242,7 +252,11 @@ class EufyCleanAPI:
 
                 return self._parse_status(dps)
             except Exception as err:
-                _LOGGER.error("Error getting status: %s", err)
+                _LOGGER.error(
+                    "Error getting status from %s: %s (Check network connectivity and device power)",
+                    self._device_ip,
+                    err,
+                )
                 return None
 
     def _parse_status(self, dps: dict[str, Any]) -> dict[str, Any]:
