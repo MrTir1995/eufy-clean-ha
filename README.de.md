@@ -150,7 +150,7 @@ automation:
       - service: vacuum.start
         target:
           entity_id: vacuum.eufy_robovac
-  
+
   - alias: "Staubsauger zur Ladestation schicken bei Ankunft"
     trigger:
       - platform: state

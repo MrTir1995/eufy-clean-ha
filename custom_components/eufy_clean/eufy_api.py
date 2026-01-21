@@ -241,7 +241,7 @@ class EufyCleanAPI:
                             "1) Device is powered on and connected to WiFi, "
                             "2) IP address is correct, "
                             "3) Device is on the same network as Home Assistant",
-                            self._device_ip,
+                            self.device_ip,
                         )
                     else:
                         _LOGGER.warning("Invalid status response: %s", status)
@@ -254,7 +254,7 @@ class EufyCleanAPI:
             except Exception as err:
                 _LOGGER.error(
                     "Error getting status from %s: %s (Check network connectivity and device power)",
-                    self._device_ip,
+                    self.device_ip,
                     err,
                 )
                 return None
